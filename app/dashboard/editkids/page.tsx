@@ -1,9 +1,10 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
-export default function EditProductPage() {
+function EditProductPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const productId = searchParams.get('id'); // atau gunakan params kalau pakai file-based routing
@@ -91,5 +92,14 @@ export default function EditProductPage() {
         </button>
       </form>
     </div>
+  );
+}
+
+// Wrap in Suspense and export as default
+export default function EditProductPageWrapper() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <EditProductPage />
+    </Suspense>
   );
 }
