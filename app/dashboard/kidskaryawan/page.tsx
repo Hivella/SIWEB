@@ -2,32 +2,8 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-
-const kidsProducts = [
-  {
-    id: 1,
-    name: "KIDS Kaos Polo Dry Pique",
-    price: 149000,
-    stock: 20,
-    image: 'https://image.uniqlo.com/UQ/ST3/id/imagesgoods/474645/item/idgoods_00_474645_3x4.jpg?width=494',
-  },
-  {
-    id: 2,
-    name: "GIRLS Celana Lebar Rib",
-    price: 149000,
-    stock: 11,
-    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTITUqbNGlGsbKAsazVtZRY1TSlaGIyzIPUxA&s',
-  },
-  {
-    id: 3,
-    name: "KIDS Celana Rileks Lebar Linen Blend",
-    price: 199000,
-    stock: 10,
-    image: 'https://image.uniqlo.com/UQ/ST3/id/imagesgoods/475771/item/idgoods_31_475771_3x4.jpg?width=494',
-  },
-];
 
 function Header() {
   return (
@@ -46,8 +22,15 @@ function Header() {
 }
 
 export default function KidsPage() {
+  const [products, setProducts] = useState<any[]>([]);
   const [activeMenu, setActiveMenu] = useState<number | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    fetch('/api/kidsproducts')
+      .then(res => res.json())
+      .then(setProducts);
+  }, []);
 
   const toggleMenu = (id: number) => {
     setActiveMenu(prev => (prev === id ? null : id));
@@ -57,11 +40,51 @@ export default function KidsPage() {
     router.push(`/dashboard/editkids?id=${id}`);
   };
 
-  const handleDelete = (id: number) => {
-    alert(`Hapus produk dengan ID: ${id}`);
+  const handleDelete = async (id: number) => {
+    if (confirm("Yakin ingin menghapus produk ini?")) {
+      await fetch('/api/kidsproducts', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      setProducts(products.filter((p) => p.id !== id));
+      setActiveMenu(null);
+    }
   };
 
-  
+  // NEW: Update stock using PUT
+  const updateStock = async (id: number, newStock: number) => {
+    const product = products.find((p) => p.id === id);
+    if (!product) return;
+    const updatedProduct = { ...product, stock: newStock };
+
+    // Update backend
+    await fetch('/api/kidsproducts', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedProduct),
+    });
+
+    // Update UI
+    setProducts((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, stock: newStock } : p))
+    );
+  };
+
+  // Handler for +
+  const handleAddStock = (id: number) => {
+    const product = products.find((p) => p.id === id);
+    if (!product) return;
+    updateStock(id, product.stock + 1);
+  };
+
+  // Handler for -
+  const handleSubtractStock = (id: number) => {
+    const product = products.find((p) => p.id === id);
+    if (!product || product.stock <= 0) return;
+    updateStock(id, product.stock - 1);
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <Header />
@@ -69,16 +92,14 @@ export default function KidsPage() {
       <div className="px-10 py-8">
         <h1 className="text-3xl font-bold mb-10">Stok baju Kids</h1>
 
-        {/* Tambahkan tombol "Tambah Produk" */}
-        <button
-          className="bg-blue-500 text-white px-6 py-2 rounded-md mb-6"
-          onClick={() => alert("Tombol tambah produk ditekan!")}
-        >
-          Tambah Produk
-        </button>
+        <Link href="/dashboard/tambahkidskaryawan">
+          <button className="bg-blue-500 text-white px-6 py-2 rounded-md mb-6">
+            Tambah Produk
+          </button>
+        </Link>
 
         <div className="space-y-10">
-          {kidsProducts.map((product) => (
+          {products.map((product) => (
             <div key={product.id} className="flex items-center gap-6 relative">
               <div className="w-24 h-28 relative">
                 <Image
@@ -95,8 +116,15 @@ export default function KidsPage() {
               </div>
 
               <div className="flex items-center gap-2 relative">
-                <button className="w-8 h-8 border rounded-full text-lg font-semibold hover:bg-gray-200">+</button>
-                <button className="w-8 h-8 border rounded-full text-lg font-semibold hover:bg-gray-200">−</button>
+                {/* + and - buttons now work */}
+                <button
+                  className="w-8 h-8 border rounded-full text-lg font-semibold hover:bg-gray-200"
+                  onClick={() => handleAddStock(product.id)}
+                >+</button>
+                <button
+                  className="w-8 h-8 border rounded-full text-lg font-semibold hover:bg-gray-200"
+                  onClick={() => handleSubtractStock(product.id)}
+                >−</button>
                 <div className="w-10 h-8 bg-gray-300 flex items-center justify-center rounded-md">
                   {product.stock}
                 </div>

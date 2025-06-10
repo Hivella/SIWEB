@@ -7,9 +7,10 @@ import { useState, useEffect } from 'react';
 function EditProductPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const productId = searchParams.get('id'); // atau gunakan params kalau pakai file-based routing
+  const productId = searchParams.get('id');
 
   const [product, setProduct] = useState({
+    id: 0,
     name: '',
     price: 0,
     stock: 0,
@@ -17,15 +18,13 @@ function EditProductPage() {
   });
 
   useEffect(() => {
-    // Simulasi ambil data dari backend berdasarkan id
     if (productId) {
-      const dummyData = {
-        name: 'T-Shirt SUPIMA Katun',
-        price: 199000,
-        stock: 20,
-        image: 'https://image.uniqlo.com/UQ/ST3/id/imagesgoods/477678/item/idgoods_53_477678_3x4.jpg?width=494',
-      };
-      setProduct(dummyData);
+      fetch('/api/kidsproducts')
+        .then(res => res.json())
+        .then(data => {
+          const prod = data.find((p: any) => p.id === Number(productId));
+          if (prod) setProduct(prod);
+        });
     }
   }, [productId]);
 
@@ -33,9 +32,14 @@ function EditProductPage() {
     setProduct({ ...product, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulasi update ke database
+    // Update the product via API
+    await fetch('/api/kidsproducts', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...product, id: Number(productId), price: Number(product.price), stock: Number(product.stock) }),
+    });
     alert('Produk berhasil diperbarui!');
     router.push('/dashboard/kidskaryawan');
   };
@@ -43,7 +47,6 @@ function EditProductPage() {
   return (
     <div className="p-10">
       <h1 className="text-3xl font-bold mb-6">Edit Produk</h1>
-
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block font-medium">Nama Produk</label>
@@ -95,7 +98,6 @@ function EditProductPage() {
   );
 }
 
-// Wrap in Suspense and export as default
 export default function EditProductPageWrapper() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
