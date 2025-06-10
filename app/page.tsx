@@ -1,56 +1,18 @@
 'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+
 import Image from 'next/image';
-import { supabase } from '../app/lib/supabaseClient';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
 
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
-    setError('');
-    const { data, error: loginError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (loginError) {
-      setError('Login failed. Please check your credentials.');
-      return;
-    }
-
-    // Fetch user role from Supabase (from 'profiles' table)
-    const user = data.user;
-    if (!user) {
-      setError('No user data returned.');
-      return;
-    }
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || !profile) {
-      setError('Unable to fetch user role.');
-      return;
-    }
-
-    if (profile.role === 'admin') {
-      router.push('/dashboard/karyawan');
-    } else if (profile.role === 'customer') {
-      router.push('/dashboard/pembeli');
+  const handleLogin = (role: 'karyawan' | 'pembeli') => {
+    if (role === 'karyawan') {
+      router.push('/dashboard/loginkaryawan');
     } else {
-      setError('Unknown role.');
+      router.push('/dashboard/loginpembeli');
     }
-  }
-
-  function handleRegister() {
-    router.push('/dashboard/register'); // Make sure you create this page
-  }
+  };
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-100">
@@ -65,54 +27,31 @@ export default function Home() {
             className="mb-6"
           />
           <h2 className="text-2xl font-semibold mb-2">SELAMAT DATANG</h2>
-          <form className="w-full" onSubmit={handleLogin}>
-            <div className="mb-4">
-              <label htmlFor="email" className="block mb-1">Email</label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-                className="w-full rounded border px-4 py-2"
-              />
-            </div>
-            <div className="mb-4">
-              <label htmlFor="password" className="block mb-1">Password</label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                className="w-full rounded border px-4 py-2"
-              />
-            </div>
-            {error && <div className="mb-2 text-red-500">{error}</div>}
-            <button type="submit" className="w-full bg-black text-white py-2 rounded hover:bg-gray-800 transition mb-2">
-              Login
-            </button>
-            <button
-              type="button"
-              className="w-full border border-black text-black py-2 rounded hover:bg-gray-200 transition"
-              onClick={handleRegister}
-            >
-              Register
-            </button>
-          </form>
+          <p className="mb-6 text-gray-600">Masuk sebagai</p>
+
+          <button
+            onClick={() => handleLogin('karyawan')}
+            className="mb-4 w-full px-6 py-2 rounded-md bg-white border shadow hover:shadow-md transition"
+          >
+            KARYAWAN
+          </button>
+
+          <button
+            onClick={() => handleLogin('pembeli')}
+            className="w-full px-6 py-2 rounded-md bg-white border shadow hover:shadow-md transition"
+          >
+            PEMBELI
+          </button>
         </div>
+
         {/* Right Side (Image) */}
         <div className="hidden md:block w-1/2 relative">
           <Image
             src="https://image.uniqlo.com/UQ/ST3/au/imagesgoods/464846/item/augoods_56_464846_3x4.jpg?width=494"
-            alt="Fashion Girl"
+            alt="Fashion"
             fill
             className="object-cover"
-            style={{ objectFit: 'cover' }}
           />
-          <div className="absolute bottom-4 left-4 text-xs text-gray-700">
-            Height: 5'7&quot;/170cm<br />Size: S
-          </div>
         </div>
       </div>
     </main>

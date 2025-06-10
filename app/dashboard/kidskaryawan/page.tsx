@@ -61,6 +61,7 @@ export default function KidsPage() {
     alert(`Hapus produk dengan ID: ${id}`);
   };
 
+  
   return (
     <div className="min-h-screen bg-white">
       <Header />
