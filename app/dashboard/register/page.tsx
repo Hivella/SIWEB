@@ -3,21 +3,51 @@
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { supabase } from '../../lib/supabaseClient';
 
 export default function RegisterPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [gender, setGender] = useState('');
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
 
-    // Simpan data atau kirim ke backend di sini
-    console.log({ email, password, gender });
+    // 1. Register with Supabase Auth
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+    });
 
-    // Setelah register, arahkan ke halaman bestseller
-    router.push('/dashboard/bestseller');
+    if (signUpError) {
+      setError(signUpError.message);
+      return;
+    }
+
+    // 2. Insert user profile (wait until user creation is successful)
+    const user = data.user;
+    if (user) {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert([
+          {
+            id: user.id,
+            role: 'customer', // Default role, adjust if needed
+            gender,
+          },
+        ]);
+      if (profileError) {
+        setError(profileError.message);
+        return;
+      }
+      // After register, redirect to bestseller
+      router.push('/dashboard/bestseller');
+    } else {
+      setError('Registration successful, but user data is missing. Please check your email for confirmation.');
+    }
   };
 
   return (
@@ -64,11 +94,13 @@ export default function RegisterPage() {
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
               <div className="flex gap-4 text-sm">
-                <label><input type="radio" name="gender" value="female" onChange={(e) => setGender(e.target.value)} /> Female</label>
-                <label><input type="radio" name="gender" value="male" onChange={(e) => setGender(e.target.value)} /> Male</label>
-                <label><input type="radio" name="gender" value="unselect" onChange={(e) => setGender(e.target.value)} /> Unselect</label>
+                <label><input type="radio" name="gender" value="female" checked={gender === 'female'} onChange={(e) => setGender(e.target.value)} /> Female</label>
+                <label><input type="radio" name="gender" value="male" checked={gender === 'male'} onChange={(e) => setGender(e.target.value)} /> Male</label>
+                <label><input type="radio" name="gender" value="unselect" checked={gender === 'unselect'} onChange={(e) => setGender(e.target.value)} /> Unselect</label>
               </div>
             </div>
+
+            {error && <div className="mb-2 text-red-500">{error}</div>}
 
             <button
               type="submit"
@@ -84,8 +116,9 @@ export default function RegisterPage() {
           <Image
             src="https://image.uniqlo.com/UQ/ST3/au/imagesgoods/464846/item/augoods_56_464846_3x4.jpg?width=494"
             alt="Fashion Girl"
-            layout="fill"
-            objectFit="cover"
+            fill
+            className="object-cover"
+            style={{ objectFit: 'cover' }}
           />
         </div>
       </div>
