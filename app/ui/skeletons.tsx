@@ -1,9 +1,7 @@
-// components/skeletons.tsx
-
 const shimmer =
   'before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/60 before:to-transparent';
 
-export function KidsProductCardSkeleton() {
+function KidsProductCardSkeleton() {
   return (
     <div
       className={`${shimmer} relative flex items-center gap-4 rounded-lg bg-gray-100 p-4 shadow-sm w-full`}
@@ -27,7 +25,7 @@ export function KidsProductCardSkeleton() {
   );
 }
 
-export function KidsSkeletonList() {
+function KidsSkeletonList() {
   return (
     <div className="space-y-4 mt-6">
       <KidsProductCardSkeleton />
@@ -37,7 +35,7 @@ export function KidsSkeletonList() {
   );
 }
 
-export default function KidsPageSkeleton() {
+export default function DashboardSkeleton() {
   return (
     <div className="px-6 py-4">
       {/* Judul dan tombol */}

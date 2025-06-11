@@ -22,7 +22,7 @@ export default function ClothingPage() {
   };
 
   const handleEdit = (id: number) => {
-    router.push(`/dashboard/editclothing?id=${id}`);
+    router.push(`/dashboard/editkids?id=${id}`);
   };
 
   const handleDelete = async (id: number) => {
@@ -70,7 +70,7 @@ export default function ClothingPage() {
       <div className="px-10 py-8">
         <h1 className="text-3xl font-bold mb-10">Stok baju Clothing</h1>
 
-        <Link href="/dashboard/tambahclothingkaryawan">
+        <Link href="/dashboard/tambahkidskaryawan">
           <button className="bg-blue-500 text-white px-6 py-2 rounded-md mb-6">
             Tambah Produk
           </button>
