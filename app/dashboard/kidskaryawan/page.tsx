@@ -4,24 +4,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import AdminNavBar from '@/app/components/AdminNavBar';
 
-function Header() {
-  return (
-    <header className="bg-black text-white px-10 py-4 rounded-b-2xl flex items-center justify-between">
-      <div className="text-xl font-semibold">UNIQLO ADMIN</div>
-      <nav className="flex items-center space-x-10 text-sm">
-        <Link href="/dashboard/kidskaryawan" className="hover:text-gray-300 font-bold">Kids</Link>
-        <Link href="/dashboard/clothingkaryawan" className="hover:text-gray-300">Clothing</Link>
-        <Link href="/dashboard/bestsellerkaryawan" className="hover:text-gray-300">Best seller</Link>
-        <Link href="/dashboard/newarrivalkaryawan" className="hover:text-gray-300">New Arrival</Link>
-        <Link href="/dashboard/daftartransaksi" className="hover:text-gray-300">Daftar transaksi</Link>
-      </nav>
-      <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center text-lg">👤</div>
-    </header>
-  );
-}
-
-export default function KidsPage() {
+export default function ClothingPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [activeMenu, setActiveMenu] = useState<number | null>(null);
   const router = useRouter();
@@ -37,7 +22,7 @@ export default function KidsPage() {
   };
 
   const handleEdit = (id: number) => {
-    router.push(`/dashboard/editkids?id=${id}`);
+    router.push(`/dashboard/editclothing?id=${id}`);
   };
 
   const handleDelete = async (id: number) => {
@@ -52,33 +37,26 @@ export default function KidsPage() {
     }
   };
 
-  // NEW: Update stock using PUT
   const updateStock = async (id: number, newStock: number) => {
     const product = products.find((p) => p.id === id);
     if (!product) return;
     const updatedProduct = { ...product, stock: newStock };
-
-    // Update backend
     await fetch('/api/kidsproducts', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updatedProduct),
     });
-
-    // Update UI
     setProducts((prev) =>
       prev.map((p) => (p.id === id ? { ...p, stock: newStock } : p))
     );
   };
 
-  // Handler for +
   const handleAddStock = (id: number) => {
     const product = products.find((p) => p.id === id);
     if (!product) return;
     updateStock(id, product.stock + 1);
   };
 
-  // Handler for -
   const handleSubtractStock = (id: number) => {
     const product = products.find((p) => p.id === id);
     if (!product || product.stock <= 0) return;
@@ -87,12 +65,12 @@ export default function KidsPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header />
+      <AdminNavBar />
 
       <div className="px-10 py-8">
-        <h1 className="text-3xl font-bold mb-10">Stok baju Kids</h1>
+        <h1 className="text-3xl font-bold mb-10">Stok baju Clothing</h1>
 
-        <Link href="/dashboard/tambahkidskaryawan">
+        <Link href="/dashboard/tambahclothingkaryawan">
           <button className="bg-blue-500 text-white px-6 py-2 rounded-md mb-6">
             Tambah Produk
           </button>
@@ -116,7 +94,6 @@ export default function KidsPage() {
               </div>
 
               <div className="flex items-center gap-2 relative">
-                {/* + and - buttons now work */}
                 <button
                   className="w-8 h-8 border rounded-full text-lg font-semibold hover:bg-gray-200"
                   onClick={() => handleAddStock(product.id)}

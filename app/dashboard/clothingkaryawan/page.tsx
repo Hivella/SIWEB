@@ -2,88 +2,83 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import AdminNavBar from '@/app/components/AdminNavBar';
 
-const kidsProducts = [
-  {
-    id: 1,
-    name: "T-Shirt Oversize Garis",
-    price: 249000,
-    stock: 20,
-    image: 'https://image.uniqlo.com/UQ/ST3/id/imagesgoods/476647/item/idgoods_69_476647_3x4.jpg?width=494',
-  },
-  {
-    id: 2,
-    name: "GIRLS Celana Lebar Rib",
-    price: 299000,
-    stock: 11,
-    image: 'https://image.uniqlo.com/UQ/ST3/id/imagesgoods/477678/item/idgoods_53_477678_3x4.jpg?width=494',
-  },
-  {
-    id: 3,
-    name: "Bus Linen Blend Lengan Volume Pendek",
-    price: 299000,
-    stock: 10,
-    image: 'https://image.uniqlo.com/UQ/ST3/id/imagesgoods/475655/item/idgoods_61_475655_3x4.jpg?width=494',
-  },
-];
-
-function Header() {
-  return (
-    <header className="bg-black text-white px-10 py-4 rounded-b-2xl flex items-center justify-between">
-      <div className="text-xl font-semibold">UNIQLO ADMIN</div>
-
-      <nav className="flex items-center space-x-10 text-sm">
-        <Link href="/dashboard/kidskaryawan" className="hover:text-gray-300 font-bold">Kids</Link>
-        <Link href="/dashboard/clothingkaryawan" className="hover:text-gray-300">Clothing</Link>
-        <Link href="/dashboard/bestsellerkaryawan" className="hover:text-gray-300">Best seller</Link>
-        <Link href="/dashboard/newarrival" className="hover:text-gray-300">New Arrival</Link>
-        <Link href="/dashboard/daftartransaksi" className="hover:text-gray-300">Daftar transaksi</Link>
-      </nav>
-
-      <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center text-lg">
-        👤
-      </div>
-    </header>
-  );
-}
-
-export default function KidsPage() {
+export default function ClothingPage() {
+  const [products, setProducts] = useState<any[]>([]);
   const [activeMenu, setActiveMenu] = useState<number | null>(null);
   const router = useRouter();
 
+  useEffect(() => {
+    fetch('/api/clothingproducts')
+      .then(res => res.json())
+      .then(setProducts);
+  }, []);
+
   const toggleMenu = (id: number) => {
-    setActiveMenu((prev) => (prev === id ? null : id));
+    setActiveMenu(prev => (prev === id ? null : id));
   };
 
   const handleEdit = (id: number) => {
-    router.push(`/dashboard/editkids`);
+    router.push(`/dashboard/editclothing?id=${id}`);
   };
 
-  const handleDelete = (id: number) => {
-    alert(`Hapus produk dengan ID: ${id}`);
+  const handleDelete = async (id: number) => {
+    if (confirm("Yakin ingin menghapus produk ini?")) {
+      await fetch('/api/clothingproducts', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      setProducts(products.filter((p) => p.id !== id));
+      setActiveMenu(null);
+    }
+  };
+
+  const updateStock = async (id: number, newStock: number) => {
+    const product = products.find((p) => p.id === id);
+    if (!product) return;
+    const updatedProduct = { ...product, stock: newStock };
+    await fetch('/api/clothingproducts', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedProduct),
+    });
+    setProducts((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, stock: newStock } : p))
+    );
+  };
+
+  const handleAddStock = (id: number) => {
+    const product = products.find((p) => p.id === id);
+    if (!product) return;
+    updateStock(id, product.stock + 1);
+  };
+
+  const handleSubtractStock = (id: number) => {
+    const product = products.find((p) => p.id === id);
+    if (!product || product.stock <= 0) return;
+    updateStock(id, product.stock - 1);
   };
 
   return (
     <div className="min-h-screen bg-white">
-      <Header />
+      <AdminNavBar />
 
       <div className="px-10 py-8">
-        <h1 className="text-3xl font-bold mb-10">Stok baju Kids</h1>
+        <h1 className="text-3xl font-bold mb-10">Stok baju Clothing</h1>
 
-        {/* Tombol Tambah Produk */}
-        <button
-          className="bg-blue-500 text-white px-6 py-2 rounded-md mb-6"
-          onClick={() => alert("Tombol tambah produk ditekan!")}
-        >
-          Tambah Produk
-        </button>
+        <Link href="/dashboard/tambahclothingkaryawan">
+          <button className="bg-blue-500 text-white px-6 py-2 rounded-md mb-6">
+            Tambah Produk
+          </button>
+        </Link>
 
         <div className="space-y-10">
-          {kidsProducts.map((product) => (
+          {products.map((product) => (
             <div key={product.id} className="flex items-center gap-6 relative">
-              {/* Gambar Produk */}
               <div className="w-24 h-28 relative">
                 <Image
                   src={product.image}
@@ -93,21 +88,23 @@ export default function KidsPage() {
                 />
               </div>
 
-              {/* Info Produk */}
               <div className="flex-1">
                 <h2 className="text-md font-semibold">{product.name}</h2>
                 <p className="text-gray-700">Rp {product.price.toLocaleString('id-ID')}</p>
               </div>
 
-              {/* Actions */}
               <div className="flex items-center gap-2 relative">
-                <button className="w-8 h-8 border rounded-full text-lg font-semibold hover:bg-gray-200">+</button>
-                <button className="w-8 h-8 border rounded-full text-lg font-semibold hover:bg-gray-200">−</button>
+                <button
+                  className="w-8 h-8 border rounded-full text-lg font-semibold hover:bg-gray-200"
+                  onClick={() => handleAddStock(product.id)}
+                >+</button>
+                <button
+                  className="w-8 h-8 border rounded-full text-lg font-semibold hover:bg-gray-200"
+                  onClick={() => handleSubtractStock(product.id)}
+                >−</button>
                 <div className="w-10 h-8 bg-gray-300 flex items-center justify-center rounded-md">
                   {product.stock}
                 </div>
-
-                {/* Tombol titik tiga */}
                 <button
                   className="ml-2 text-2xl font-bold text-gray-600"
                   onClick={() => toggleMenu(product.id)}
@@ -115,7 +112,6 @@ export default function KidsPage() {
                   ⋮
                 </button>
 
-                {/* Menu Pilihan */}
                 {activeMenu === product.id && (
                   <div className="absolute right-0 top-12 bg-white border shadow rounded-md z-20">
                     <button
