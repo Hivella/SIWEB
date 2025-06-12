@@ -1,6 +1,26 @@
 const shimmer =
   'before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/60 before:to-transparent';
 
+export function RevenueChartSkeleton() {
+  return (
+    <div className={`relative min-h-[200px] rounded-lg bg-gray-100 ${shimmer}`}>
+      {/* Simulate chart area */}
+      <div className="h-36" />
+    </div>
+  );
+}
+
+export function LatestInvoicesSkeleton() {
+  return (
+    <div className={`relative min-h-[200px] rounded-lg bg-gray-100 ${shimmer}`}>
+      {/* Simulate table/list */}
+      <div className="h-8 w-1/3 my-2 bg-gray-200 rounded" />
+      <div className="h-8 w-2/3 my-2 bg-gray-200 rounded" />
+      <div className="h-8 w-1/2 my-2 bg-gray-200 rounded" />
+    </div>
+  );
+}
+
 function KidsProductCardSkeleton() {
   return (
     <div
